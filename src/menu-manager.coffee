@@ -149,9 +149,9 @@ class MenuManager
   update: ->
     return unless @initialized
 
-    clearImmediate(@pendingUpdateOperation) if @pendingUpdateOperation?
+    clearTimeout(@pendingUpdateOperation) if @pendingUpdateOperation?
 
-    @pendingUpdateOperation = setImmediate =>
+    @pendingUpdateOperation = setTimeout(=>
       unsetKeystrokes = new Set
       for binding in @keymapManager.getKeyBindings()
         if binding.command is 'unset!'
@@ -161,13 +161,13 @@ class MenuManager
       for binding in @keymapManager.getKeyBindings()
         continue unless @includeSelector(binding.selector)
         continue if unsetKeystrokes.has(binding.keystrokes)
-        continue if binding.keystrokes.includes(' ')
         continue if process.platform is 'darwin' and /^alt-(shift-)?.$/.test(binding.keystrokes)
         continue if process.platform is 'win32' and /^ctrl-alt-(shift-)?.$/.test(binding.keystrokes)
         keystrokesByCommand[binding.command] ?= []
         keystrokesByCommand[binding.command].unshift binding.keystrokes
 
       @sendToBrowserProcess(@template, keystrokesByCommand)
+    , 1)
 
   loadPlatformItems: ->
     if platformMenu?
